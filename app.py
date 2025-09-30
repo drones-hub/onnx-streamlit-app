@@ -1,29 +1,44 @@
 import streamlit as st
 import os
-import requests
 import onnxruntime as ort
 import numpy as np
+import requests
 
-# Download model once and cache
-@st.cache_data
+st.set_page_config(page_title="ONNX Model Prediction", layout="centered")
+
+# -------------------------
+# Function to download model once
+# -------------------------
+@st.cache_data(show_spinner=True)
 def download_model(url, output="model.onnx"):
     if not os.path.exists(output):
-        r = requests.get(url)
+        st.info("Downloading ONNX model...")
+        r = requests.get(url, stream=True)
+        r.raise_for_status()  # ensure we get an error if download fails
         with open(output, "wb") as f:
-            f.write(r.content)
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+        st.success("Model downloaded!")
     return output
 
-dropbox_url = "https://www.dropbox.com/s/2gngsmey4f56d2bxk4gjb/NEW_trainedCropHeightModel_Customized.onnx?dl=1"
-model_path = download_model(dropbox_url)
+# -------------------------
+# Use a direct download link (Hugging Face, GitHub LFS, or Dropbox dl=1)
+# -------------------------
+model_url = "https://www.dropbox.com/s/2gngsmey4f56d2bxk4gjb/NEW_trainedCropHeightModel_Customized.onnx?dl=1"
+model_path = download_model(model_url)
 
+# -------------------------
 # Load ONNX model
-@st.cache_data
+# -------------------------
+@st.cache_data(show_spinner=True)
 def load_model(path):
     return ort.InferenceSession(path)
 
 session = load_model(model_path)
 
+# -------------------------
 # Streamlit UI
+# -------------------------
 st.title("ONNX Model Prediction App")
 
 crop_age = st.selectbox("Crop Age (months)", [8, 10])
@@ -37,5 +52,8 @@ input_data = np.array([[crop_age, visual_map[visual_category], yield_map[yield_c
 
 if st.button("Predict"):
     input_name = session.get_inputs()[0].name
-    result = session.run(None, {input_name: input_data})
-    st.success(f"Prediction: {result[0][0]}")
+    try:
+        result = session.run(None, {input_name: input_data})
+        st.success(f"Prediction: {result[0][0]}")
+    except Exception as e:
+        st.error(f"Error during prediction: {e}")
