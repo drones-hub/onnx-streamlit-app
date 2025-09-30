@@ -8,7 +8,7 @@ from PIL import Image
 # -----------------------------
 # 1. Download ONNX model
 # -----------------------------
-model_url = "https://huggingface.co/bhagyashrideshmukh72/yieldprediction/resolve/main/NEW_trainedCropHeightModel_Customized.onnx"
+model_url = "https://huggingface.co/bhagyashrideshmukh72/yieldprediction/blob/main/NEW_trainedCropHeightModel_Customized.onnx"
 
 @st.cache_data
 def download_model(url, output="model.onnx"):
