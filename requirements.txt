@@ -1,4 +1,4 @@
 streamlit
 numpy
 onnxruntime
-gdown
+requests
