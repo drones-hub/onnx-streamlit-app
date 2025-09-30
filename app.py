@@ -3,7 +3,7 @@ import numpy as np
 import onnxruntime as ort
 import gdown
 
-url = "https://drive.google.com/file/d/1aHXW0BTztLzL1EY9t7TQHt94lUOWi1Vx/view?usp=drive_link"
+url = "https://drive.google.com/uc?id=1aHXW0BTztLzL1EY9t7TQHt94lUOWi1Vx"
 output = "model.onnx"
 gdown.download(url, output, quiet=False)
 
