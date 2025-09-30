@@ -21,13 +21,11 @@ input_data = np.array([[
     crop_age,
     visual_map[visual_category],
     yield_map[yield_class],
-    rainfall,
-    temperature
 ]], dtype=np.float32)
 
 
 # Prepare input data for ONNX model
-input_data = np.array([[input1, input2, input3, input4, input5]], dtype=np.float32)
+input_data = np.array([[input1, input2, input3]], dtype=np.float32)
 
 # Load ONNX model
 @st.cache_data
