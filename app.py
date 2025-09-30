@@ -1,20 +1,22 @@
+https://huggingface.co/bhagyashrideshmukh72/yieldprediction/blob/main/NEW_trainedCropHeightModel_Customized.onnx
 import streamlit as st
 import os
+import requests
 import onnxruntime as ort
 import numpy as np
-import requests
+from PIL import Image
 
-st.set_page_config(page_title="ONNX Model Prediction", layout="centered")
+st.set_page_config(page_title="Sugarcane Yield Prediction", layout="centered")
 
 # -------------------------
-# Function to download model once
+# Download and cache ONNX model
 # -------------------------
-@st.cache_data(show_spinner=True)
+@st.cache_data
 def download_model(url, output="model.onnx"):
     if not os.path.exists(output):
         st.info("Downloading ONNX model...")
         r = requests.get(url, stream=True)
-        r.raise_for_status()  # ensure we get an error if download fails
+        r.raise_for_status()
         with open(output, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
@@ -22,38 +24,49 @@ def download_model(url, output="model.onnx"):
     return output
 
 # -------------------------
-# Use a direct download link (Hugging Face, GitHub LFS, or Dropbox dl=1)
-# -------------------------
-model_url = "https://www.dropbox.com/s/2gngsmey4f56d2bxk4gjb/NEW_trainedCropHeightModel_Customized.onnx?dl=1"
-model_path = download_model(model_url)
-
-# -------------------------
 # Load ONNX model
 # -------------------------
-@st.cache_data(show_spinner=True)
+@st.cache_data
 def load_model(path):
     return ort.InferenceSession(path)
 
+# Replace with your Hugging Face direct download link
+model_url = "https://huggingface.co/bhagyashrideshmukh72/yieldprediction/blob/main/NEW_trainedCropHeightModel_Customized.onnx"
+model_path = download_model(model_url)
 session = load_model(model_path)
 
 # -------------------------
 # Streamlit UI
 # -------------------------
-st.title("ONNX Model Prediction App")
+st.title("Sugarcane Yield Prediction App")
+st.write("Upload an image of your sugarcane farm to predict yield.")
 
-crop_age = st.selectbox("Crop Age (months)", [8, 10])
-visual_category = st.selectbox("Visual Category", ["Sugarcane", "Non-sugarcane", "Mixed"])
-yield_class = st.selectbox("Yield Class", ["Poor", "Good", "Very Good"])
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-visual_map = {"Sugarcane": 0, "Non-sugarcane": 1, "Mixed": 2}
-yield_map = {"Poor": 0, "Good": 1, "Very Good": 2}
+if uploaded_file is not None:
+    # Open the uploaded image
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-input_data = np.array([[crop_age, visual_map[visual_category], yield_map[yield_class]]], dtype=np.float32)
+    # -------------------------
+    # Preprocess image
+    # -------------------------
+    # Resize to 224x224 (adjust if your model uses a different size)
+    image = image.resize((224, 224))
+    image_array = np.array(image).astype(np.float32)
 
-if st.button("Predict"):
-    input_name = session.get_inputs()[0].name
+    # Normalize if required (example: divide by 255)
+    image_array = image_array / 255.0
+
+    # Add batch dimension
+    input_data = np.expand_dims(image_array, axis=0)  # shape: (1, 224, 224, 3)
+
+    # -------------------------
+    # Make prediction
+    # -------------------------
     try:
+        input_name = session.get_inputs()[0].name
         result = session.run(None, {input_name: input_data})
-        st.success(f"Prediction: {result[0][0]}")
+        st.success(f"Predicted Yield: {result[0][0]:.2f} kg/ha")
     except Exception as e:
         st.error(f"Error during prediction: {e}")
