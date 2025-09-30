@@ -12,8 +12,6 @@ st.write("Enter UAV and field attributes for prediction:")
 crop_age = st.selectbox("Crop Age (months)", [8, 10])
 visual_category = st.selectbox("Visual Category", ["Sugarcane", "Non-sugarcane", "Mixed"])
 yield_class = st.selectbox("Yield Class", ["Poor", "Good", "Very Good"])
-rainfall = st.number_input("Rainfall (mm)", value=0.0)
-temperature = st.number_input("Temperature (°C)", value=0.0)
 
 # Encode categorical values as numbers for the ONNX model
 visual_map = {"Sugarcane": 0, "Non-sugarcane": 1, "Mixed": 2}
